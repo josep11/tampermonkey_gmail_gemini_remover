@@ -57,8 +57,8 @@
       //   '.nH aHU'. A space in a selector means "descendant of".
       // =========================================================================
       const TARGET_CLASSES = [
-          's1rbBe',         // 20260814 - Gemini "try it" promo in GMail
-          'VYBDae-JX-ano',  // 20260902 - Gemini upgrade icon
+          's1rbBe', // 20260814 - Gemini "try it" promo in GMail
+          'VYBDae-JX-ano', // 20260902 - Gemini upgrade icon
       ];
  
       // How long (ms) to keep watching the page for the elements to appear

@@ -59,6 +59,7 @@
       const TARGET_CLASSES = [
           's1rbBe', // 20260814 - Gemini "try it" promo in GMail
           'VYBDae-JX-ano', // 20260902 - Gemini upgrade icon
+          'EiVpKc.aoH', // 20260902 - Try Gemini icon next to user icon
       ];
  
       // How long (ms) to keep watching the page for the elements to appear

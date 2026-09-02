@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GMailTryGeminiRemover
 // @namespace    http://tampermonkey.net/
-// @version      3.0
+// @version      3.1
 // @description  Removes Try Gemini / Upgrade icons in GMail.
 // @author       c360e5f1
 // @license      GNU GPL v3.0

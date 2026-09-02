@@ -4,7 +4,7 @@
 // @version      3.1
 // @description  Removes Try Gemini / Upgrade icons in GMail.
 // @author       c360e5f1
-// @license      GNU GPL v3.0
+// @license      GNU GPL v3.1
 // @namespace    https://github.com/c360e5f1/tampermonkey_youtube_cardremover
 // @updateURL    https://raw.githubusercontent.com/c360e5f1/tampermonkey_gmail_trygemini_remover/main/tampermonkey_gmail_trygemini_remover.user.js
 // @downloadURL  https://raw.githubusercontent.com/c360e5f1/tampermonkey_gmail_trygemini_remover/main/tampermonkey_gmail_trygemini_remover.user.js
@@ -58,8 +58,8 @@
       // =========================================================================
       const TARGET_CLASSES = [
           's1rbBe', // 20260814 - Gemini "try it" promo in GMail
-          'VYBDae-JX-ano', // 20260902 - Gemini upgrade icon
-          'r4vW1e e5IPTd', // 20260902 - Try Gemini icon next to user icon
+          'xdV2Hc', // 20260902 - "Upgrade" icon
+          'div[jscontroller="xdV2Hc"]', // 20260902 - "Try Gemini" icon in the top right
       ];
  
       // How long (ms) to keep watching the page for the elements to appear

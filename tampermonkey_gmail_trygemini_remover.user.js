@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GMailTryGeminiRemover
 // @namespace    http://tampermonkey.net/
-// @version      3.1
+// @version      3.2
 // @description  Removes Try Gemini / Upgrade icons in GMail.
 // @author       c360e5f1
 // @license      GNU GPL v3.1
@@ -57,8 +57,7 @@
       //   '.nH aHU'. A space in a selector means "descendant of".
       // =========================================================================
       const TARGET_CLASSES = [
-          's1rbBe', // 20260814 - Gemini "try it" promo in GMail
-          'xdV2Hc', // 20260902 - "Upgrade" icon
+          's1rbBe', // 20260814 - "Upgrade" icon
           'div[jscontroller="xdV2Hc"]', // 20260902 - "Try Gemini" icon in the top right
       ];
  

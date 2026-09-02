@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         GMailTryGeminiRemover
 // @namespace    http://tampermonkey.net/
-// @version      2.0
-// @description  Removes the Gemini promo div from GMail.
+// @version      3.0
+// @description  Removes Try Gemini / Upgrade icons in GMail.
 // @author       c360e5f1
 // @license      GNU GPL v3.0
 // @namespace    https://github.com/c360e5f1/tampermonkey_youtube_cardremover
@@ -16,34 +16,118 @@
 // ==/UserScript==
 
 (function () {
-    'use strict';
-
-    const TARGET_CLASS = 's1rbBe';
-
-    function removeUpgradeButton() {
-        const el = document.querySelector(`.${TARGET_CLASS}`);
-        if (el) {
-            el.remove();
-            return true;
-        }
-        return false;
-    }
-
-    // Try immediately in case the element already exists
-    if (removeUpgradeButton()) return;
-
-    // Otherwise, observe the DOM until it appears, then clean up
-    const observer = new MutationObserver((mutations, obs) => {
-        if (removeUpgradeButton()) {
-            obs.disconnect();
-        }
-    });
-
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-
-    // Safety: disconnect after 30s if the element never appears (avoid leaking observers)
-    setTimeout(() => observer.disconnect(), 30000);
+      'use strict';
+ 
+      // =========================================================================
+      // CONFIGURATION — EDIT THIS LIST
+      // =========================================================================
+      //
+      // Add the CSS class name of each <div> (or any element) you want removed.
+      // Each entry is matched with document.querySelectorAll('.<name>'), so:
+      //   - Use the class name WITHOUT the leading dot.
+      //   - ALL elements matching each class will be removed (not just the first).
+      //
+      // -------------------------------------------------------------------------
+      // EXAMPLE 1 — remove a single element (just one entry in the array):
+      //
+      //   const TARGET_CLASSES = [
+      //       's1rbBe',
+      //   ];
+      //
+      // -------------------------------------------------------------------------
+      // EXAMPLE 2 — remove multiple elements (one entry per line):
+      //
+      //   const TARGET_CLASSES = [
+      //       's1rbBe',        // Gemini "try it" promo
+      //       'aT5-aX',        // some other promo banner
+      //       'nH.aHU',        // NOTE: see the advanced note below about spaces
+      //   ];
+      //
+      // -------------------------------------------------------------------------
+      // ADVANCED — matching by more than a class name:
+      //
+      //   Entries are used as full CSS selectors, so you are not limited to
+      //   class names. For example:
+      //       '#someId'                    // match by id
+      //       'div[data-tooltip="Chat"]'   // match by attribute
+      //       '.classA.classB'             // element having BOTH classes
+      //
+      //   IMPORTANT: an element with the DOM class attribute "nH aHU" (a space
+      //   between two classes) is written as '.nH.aHU' in a selector, NOT
+      //   '.nH aHU'. A space in a selector means "descendant of".
+      // =========================================================================
+      const TARGET_CLASSES = [
+          's1rbBe',         // 20260814 - Gemini "try it" promo in GMail
+          'VYBDae-JX-ano',  // 20260902 - Gemini upgrade icon
+      ];
+ 
+      // How long (ms) to keep watching the page for the elements to appear
+      // before giving up and disconnecting the observer.
+      const OBSERVE_TIMEOUT_MS = 30000;
+ 
+      // =========================================================================
+      // Implementation — usually no need to edit below this line.
+      // =========================================================================
+ 
+      // Build a set of the selectors we still need to remove. Once a selector
+      // has matched and been removed at least once, we stop tracking it so the
+      // observer can disconnect as soon as everything is gone.
+      const remaining = new Set(TARGET_CLASSES);
+ 
+      /**
+       * Remove every element matching the given selector.
+       * @param {string} selector - CSS class name or full CSS selector.
+       * @returns {boolean} true if at least one element was found and removed.
+       */
+      function removeBySelector(selector) {
+          // If the entry looks like a bare class name (no CSS special chars),
+          // treat it as a class selector by prefixing a dot. Otherwise use it
+          // verbatim as a full CSS selector.
+          const isBareClass = /^[a-zA-Z_][\w-]*$/.test(selector);
+          const query = isBareClass ? `.${selector}` : selector;
+ 
+          const nodes = document.querySelectorAll(query);
+          if (nodes.length === 0) return false;
+ 
+          nodes.forEach((el) => el.remove());
+          return true;
+      }
+ 
+      /**
+       * Attempt to remove all still-pending targets.
+       * @returns {boolean} true when nothing is left to remove.
+       */
+      function removeAllTargets() {
+          for (const selector of Array.from(remaining)) {
+              if (removeBySelector(selector)) {
+                  remaining.delete(selector);
+              }
+          }
+          return remaining.size === 0;
+      }
+ 
+      // Try immediately in case the elements already exist.
+      if (removeAllTargets()) return;
+ 
+      // Otherwise, observe the DOM until every target has appeared and been
+      // removed, then clean up the observer.
+      const observer = new MutationObserver((mutations, obs) => {
+          if (removeAllTargets()) {
+              obs.disconnect();
+          }
+      });
+ 
+      // document.body may not exist yet at document-start; guard for it.
+      const startObserving = () => {
+          observer.observe(document.body, { childList: true, subtree: true });
+          // Safety: disconnect after the timeout if some target never appears
+          // (avoid leaking an observer that runs forever).
+          setTimeout(() => observer.disconnect(), OBSERVE_TIMEOUT_MS);
+      };
+ 
+      if (document.body) {
+          startObserving();
+      } else {
+          document.addEventListener('DOMContentLoaded', startObserving, { once: true });
+      }
 })();

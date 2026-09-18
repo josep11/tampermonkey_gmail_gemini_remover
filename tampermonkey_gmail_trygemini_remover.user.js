@@ -2,7 +2,7 @@
 // @name         GMailTryGeminiRemover
 // @namespace    http://tampermonkey.net/
 // @version      4.1
-// @description  Removes Gemini icons in GMail.
+// @description  Removes Gemini icons in Gmail.
 // @author       josep11
 // @license      GNU GPL v3.1
 // @namespace    https://github.com/josep11/tampermonkey_youtube_cardremover

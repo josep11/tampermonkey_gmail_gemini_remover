@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         GMailTryGeminiRemover
 // @namespace    http://tampermonkey.net/
-// @version      4.0
-// @description  Removes Gemini icons in GMail.
+// @version      4.1
+// @description  Removes Gemini icons in Gmail.
 // @author       josep11
 // @license      GNU GPL v3.1
 // @namespace    https://github.com/josep11/tampermonkey_youtube_cardremover
@@ -59,19 +59,7 @@
       const TARGET_CLASSES = [
           's1rbBe', // 20260814 - "Upgrade" icon
           'div[jscontroller="xdV2Hc"]', // 20260902 - "Try Gemini" icon in the top right
-      ];
-
-      // -------------------------------------------------------------------------
-      // TARGET_TEXTS - match by visible/tooltip text instead of class/selector.
-      //
-      // Selector are fragile. Instead, we find the element containing that text, then
-      // climb up to the UPPERMOST ancestor whose entire text content is still
-      // exactly that string (i.e. the highest ancestor that doesn't drag in any
-      // unrelated sibling content), and remove that ancestor. See
-      // findUppermostTextContainer() below for the traversal logic.
-      // -------------------------------------------------------------------------
-      const TARGET_TEXTS = [
-          'Ask Gemini', // 20260918 - "Ask Gemini" icon/tooltip in the toolbar
+          'div[jscontroller="EdTKdf"]', // 20260918 - "Ask Gemini" icon in the toolbar.
       ];
  
       // How long (ms) to keep watching the page for the elements to appear
@@ -86,7 +74,6 @@
       // entry has matched and been removed at least once, we stop tracking it
       // so the observer can disconnect as soon as everything is gone.
       const remainingSelectors = new Set(TARGET_CLASSES);
-      const remainingTexts = new Set(TARGET_TEXTS);
  
       /**
        * Remove every element matching the given selector.
@@ -95,7 +82,7 @@
        */
       function removeBySelector(selector) {
           // If the entry looks like a bare class name (no CSS special chars),
-          // treat it as a class selector by prefixing a dot. Otherwise use it
+          // treat it as a class selector by prefixing a dot. Otherwise, use it
           // verbatim as a full CSS selector.
           const isBareClass = /^[a-zA-Z_][\w-]*$/.test(selector);
           const query = isBareClass ? `.${selector}` : selector;
@@ -104,53 +91,6 @@
           if (nodes.length === 0) return false;
  
           nodes.forEach((el) => el.remove());
-          return true;
-      }
- 
-      /**
-       * @param {Node} root
-       * @param {string} text
-       * @returns {Text|null}
-       */
-      function findTextNode(root, text) {
-          const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-          let node;
-          while ((node = walker.nextNode())) {
-              if (node.textContent.trim() === text) return node;
-          }
-          return null;
-      }
-
-      /**
-       * Given an element known to contain `text`, climb up through its
-       * ancestors as long as the parent's ENTIRE text content (trimmed) is
-       * still exactly `text`.
-       * 
-       * @param {Element} el
-       * @param {string} text
-       * @returns {Element} the uppermost ancestor safe to remove.
-       */
-      function findUppermostTextContainer(el, text) {
-          let current = el;
-          while (current.parentElement && current.parentElement.textContent.trim() === text) {
-              current = current.parentElement;
-          }
-          return current;
-      }
-
-      /**
-       * @param {string} text - exact (trimmed) text identifying the widget.
-       * @returns {boolean} true if removed
-       */
-      function removeByContainedText(text) {
-          if (!document.body) return false;
-
-          const textNode = findTextNode(document.body, text);
-          const anchor = textNode && textNode.parentElement;
-          if (!anchor) return false;
-
-          const target = findUppermostTextContainer(anchor, text);
-          target.remove();
           return true;
       }
 
@@ -164,12 +104,7 @@
                   remainingSelectors.delete(selector);
               }
           }
-          for (const text of Array.from(remainingTexts)) {
-              if (removeByContainedText(text)) {
-                  remainingTexts.delete(text);
-              }
-          }
-          return remainingSelectors.size === 0 && remainingTexts.size === 0;
+          return remainingSelectors.size === 0;
       }
  
       // Try immediately in case the elements already exist.

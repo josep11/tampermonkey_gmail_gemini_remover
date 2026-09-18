@@ -60,6 +60,19 @@
           's1rbBe', // 20260814 - "Upgrade" icon
           'div[jscontroller="xdV2Hc"]', // 20260902 - "Try Gemini" icon in the top right
       ];
+
+      // -------------------------------------------------------------------------
+      // TARGET_TEXTS - match by visible/tooltip text instead of class/selector.
+      //
+      // Selector are fragile. Instead, we find the element containing that text, then
+      // climb up to the UPPERMOST ancestor whose entire text content is still
+      // exactly that string (i.e. the highest ancestor that doesn't drag in any
+      // unrelated sibling content), and remove that ancestor. See
+      // findUppermostTextContainer() below for the traversal logic.
+      // -------------------------------------------------------------------------
+      const TARGET_TEXTS = [
+          'Ask Gemini', // 20260918 - "Ask Gemini" icon/tooltip in the toolbar
+      ];
  
       // How long (ms) to keep watching the page for the elements to appear
       // before giving up and disconnecting the observer.
@@ -69,10 +82,11 @@
       // Implementation — usually no need to edit below this line.
       // =========================================================================
  
-      // Build a set of the selectors we still need to remove. Once a selector
-      // has matched and been removed at least once, we stop tracking it so the
-      // observer can disconnect as soon as everything is gone.
-      const remaining = new Set(TARGET_CLASSES);
+      // Build sets of the selectors/texts we still need to remove. Once an
+      // entry has matched and been removed at least once, we stop tracking it
+      // so the observer can disconnect as soon as everything is gone.
+      const remainingSelectors = new Set(TARGET_CLASSES);
+      const remainingTexts = new Set(TARGET_TEXTS);
  
       /**
        * Remove every element matching the given selector.
@@ -94,16 +108,68 @@
       }
  
       /**
+       * @param {Node} root
+       * @param {string} text
+       * @returns {Text|null}
+       */
+      function findTextNode(root, text) {
+          const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+          let node;
+          while ((node = walker.nextNode())) {
+              if (node.textContent.trim() === text) return node;
+          }
+          return null;
+      }
+
+      /**
+       * Given an element known to contain `text`, climb up through its
+       * ancestors as long as the parent's ENTIRE text content (trimmed) is
+       * still exactly `text`.
+       * 
+       * @param {Element} el
+       * @param {string} text
+       * @returns {Element} the uppermost ancestor safe to remove.
+       */
+      function findUppermostTextContainer(el, text) {
+          let current = el;
+          while (current.parentElement && current.parentElement.textContent.trim() === text) {
+              current = current.parentElement;
+          }
+          return current;
+      }
+
+      /**
+       * @param {string} text - exact (trimmed) text identifying the widget.
+       * @returns {boolean} true if removed
+       */
+      function removeByContainedText(text) {
+          if (!document.body) return false;
+
+          const textNode = findTextNode(document.body, text);
+          const anchor = textNode && textNode.parentElement;
+          if (!anchor) return false;
+
+          const target = findUppermostTextContainer(anchor, text);
+          target.remove();
+          return true;
+      }
+
+      /**
        * Attempt to remove all still-pending targets.
        * @returns {boolean} true when nothing is left to remove.
        */
       function removeAllTargets() {
-          for (const selector of Array.from(remaining)) {
+          for (const selector of Array.from(remainingSelectors)) {
               if (removeBySelector(selector)) {
-                  remaining.delete(selector);
+                  remainingSelectors.delete(selector);
               }
           }
-          return remaining.size === 0;
+          for (const text of Array.from(remainingTexts)) {
+              if (removeByContainedText(text)) {
+                  remainingTexts.delete(text);
+              }
+          }
+          return remainingSelectors.size === 0 && remainingTexts.size === 0;
       }
  
       // Try immediately in case the elements already exist.

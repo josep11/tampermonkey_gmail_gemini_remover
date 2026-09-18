@@ -72,6 +72,7 @@
       // -------------------------------------------------------------------------
       const TARGET_TEXTS = [
           'Ask Gemini', // 20260918 - "Ask Gemini" icon/tooltip in the toolbar
+      //     TODO: internationalize button to pick also other lang. such as "Pregunta a Gemini"
       ];
  
       // How long (ms) to keep watching the page for the elements to appear
